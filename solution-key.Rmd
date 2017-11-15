@@ -296,43 +296,6 @@ summary(lm.fit)
 
 df <- df %>% mutate(y.lm = predict(object = lm.fit, newdata = df))
 training <- training %>% mutate(y.lm = predict(object = lm.fit))
-
-# Train local linear model y ~ x on training, using default low flexibility (high bandwidth)
-ll.fit.lowflex <- npreg(y ~ x, data = training, method = "ll", bws = 0.5)
-summary(ll.fit.lowflex)
-
-# Train local linear model y ~ x on training, using default low flexibility (high bandwidth)
-ll.fit.highflex <- npreg(y ~ x, data = training, method = "ll", bws = 0.01)
-summary(ll.fit.highflex)
-
-df <- df %>% mutate(y.ll.lowflex = predict(object = ll.fit.lowflex, newdata = df), y.ll.highflex = predict(object = ll.fit.highflex, newdata = df))
-training <- training %>% mutate(y.ll.lowflex = predict(object = ll.fit.lowflex, newdata = training), y.ll.highflex = predict(object = ll.fit.highflex, newdata = training))
-
-
-# Create vector of several bandwidth
-bw <- seq(0.01, 0.5, by = 0.001)
-
-
-# Train local linear model y ~ x on training with each bandwidth
-llbw.fit <- lapply(X = bw, FUN = function(bw) {npreg(y ~ x, data = training, method = "ll", bws = bw)})
-
-# Compute for each bandwidth the MSE-training
-mse.training <- function(fit.model){
-  predictions <- predict(object = fit.model, newdata = training)
-  training %>% mutate(squared.error = (y - predictions)^2) %>% summarize(mse = mean(squared.error))
-}
-mse.train.results <- unlist(lapply(X = llbw.fit, FUN = mse.training))
-
-# Compute for each bandwidth the MSE-test
-mse.test <- function(fit.model){
-  predictions <- predict(object = fit.model, newdata = test)
-  test %>% mutate(squared.error = (y - predictions)^2) %>% summarize(mse = mean(squared.error))
-}
-mse.test.results <- unlist(lapply(X = llbw.fit, FUN = mse.test))
-
-# Plot
-mse.df <- tbl_df(data.frame(bandwidth = bw, mse.train = mse.train.results, mse.test = mse.test.results))
-
 ```
 
 Step 1 : If the true model is (T), what is $f$ in this case?
